@@ -15,4 +15,4 @@ springboot可以通过amqp封装来直接操作Rabbitmq
 
 
 
-项目地址：https://github.com/lihm1028/rabbitmqdemo
+项目地址：https://github.com/lihm1028/rabbitmqdemo.git
