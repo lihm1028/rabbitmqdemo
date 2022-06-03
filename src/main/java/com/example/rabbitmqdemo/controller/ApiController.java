@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
+    private static AtomicInteger count = new AtomicInteger();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-
     @Autowired
     AmqpAdmin amqpAdmin;
 
@@ -86,16 +86,19 @@ public class ApiController {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames("bookQueue");
+        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         container.setMessageListener((ChannelAwareMessageListener) (message, channel) -> {
             final MessageProperties properties = message.getMessageProperties();
             logger.info("收到消息参数:{}", message.getMessageProperties());
             if (StringUtils.equalsIgnoreCase(MessageProperties.CONTENT_TYPE_JSON, properties.getContentType())) {
                 try {
                     final Book book = new ObjectMapper().readValue(message.getBody(), Book.class);
+
+                    channel.basicAck(properties.getDeliveryTag(), false);//确认消息
                     logger.info("收到book消息:{}", book);
                 } catch (IOException e) {
                     logger.info("处理Rabbitmq消息失败:{}", e);
-                    channel.basicReject(properties.getDeliveryTag(), false);
+                    channel.basicReject(properties.getDeliveryTag(), false);//拒绝消息
                 }
             }
         });
@@ -126,8 +129,8 @@ public class ApiController {
          * 2.声明Queue
          * 注：非必须步骤 可以手动配置，也可以程序绑定
          */
-        final Queue msqQueue = new Queue("bookQueue");
-        amqpAdmin.declareQueue(msqQueue);
+        final Queue bookQueue = new Queue("bookQueue");
+        amqpAdmin.declareQueue(bookQueue);
 
 
         /**
@@ -142,6 +145,7 @@ public class ApiController {
          * 4.向指定交换发送消息
          */
         Book book = new Book("庄子", "zhuangzi@qq.com");
+        book.setId(count.incrementAndGet());
 
         final String content = new ObjectMapper().writeValueAsString(book);
 
