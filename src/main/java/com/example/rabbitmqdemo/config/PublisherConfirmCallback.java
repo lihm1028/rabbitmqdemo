@@ -43,7 +43,7 @@ public class PublisherConfirmCallback implements RabbitTemplate.ConfirmCallback 
 
     @Override
     public void confirm(CorrelationData correlationData, boolean ack, String cause) {
-        logger.info("ConfirmCallback:{} ,{},{}" ,correlationData, ack, cause);
+        logger.info("ConfirmCallback:{} ,{},{}", correlationData, ack, cause);
     }
 
 }

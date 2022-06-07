@@ -11,7 +11,6 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,19 +26,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequestMapping("/api")
 public class ApiController {
     private static AtomicInteger count = new AtomicInteger();
+    final AmqpAdmin amqpAdmin;
+    final AmqpTemplate amqpTemplate;
+    final RabbitTemplate rabbitTemplate;
+
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    @Autowired
-    AmqpAdmin amqpAdmin;
 
+    public ApiController(AmqpAdmin amqpAdmin, AmqpTemplate amqpTemplate, RabbitTemplate rabbitTemplate) {
+        this.amqpAdmin = amqpAdmin;
+        this.amqpTemplate = amqpTemplate;
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
-    @Autowired
-    private AmqpTemplate amqpTemplate;
-
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-
-//
+    //
 //    @Bean
 //    CommandLineRunner rabbitConsumer(ConnectionFactory connectionFactory) {
 //
@@ -137,7 +137,7 @@ public class ApiController {
          * 3.将队列和交换机绑定
          * 注：非必须步骤 可以手动配置，也可以程序绑定
          */
-        final Binding binding = BindingBuilder.bind(msqQueue).to(topicExchange).with("#");
+        final Binding binding = BindingBuilder.bind(bookQueue).to(topicExchange).with("#");
         amqpAdmin.declareBinding(binding);
 
 
